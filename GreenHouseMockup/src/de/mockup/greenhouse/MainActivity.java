@@ -11,6 +11,7 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
@@ -25,7 +26,10 @@ import android.widget.TextView;
 public class MainActivity extends Activity {
 
 	Button testSendButton;
+	Button startServiceButton;
+	Button endServiceButton;
 	EditText paramEditText;
+	EditText editTextIp;
 	TextView answerTextView;
 
 	private Socket socket;
@@ -33,32 +37,57 @@ public class MainActivity extends Activity {
 	Handler updateConversationHandler;
 
 	private static final int SERVERPORT = 80;
-	private static final String SERVER_IP = "192.168.2.101";
+	private String SERVER_IP = "192.168.2.101";
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
+		editTextIp = (EditText) findViewById(R.id.editTextIp);
 		testSendButton = (Button) findViewById(R.id.button_testSend);
+		startServiceButton = (Button) findViewById(R.id.buttonStartService);
+		endServiceButton = (Button) findViewById(R.id.buttonEndService);
 		paramEditText = (EditText) findViewById(R.id.editText_Param);
 		answerTextView = (TextView) findViewById(R.id.textView_Answer);
 
-		new Thread(new ClientThread()).start();
-
 		updateConversationHandler = new Handler();
 
+		startServiceButton.setOnClickListener(new OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				startNewService(v);
+			}
+		});
+		
+		endServiceButton.setOnClickListener(new OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				stopNewService(v);
+			}
+		});
+		
 		testSendButton.setOnClickListener(new OnClickListener() {
 
 			@Override
 			public void onClick(View v) {
 
 				try {
+					// TODO - Vielleicht nur ausführen wenn der Klick gemacht
+					// wird und
+					// danach wieder beenden, damit Arduino nicht blockiert
+
+					SERVER_IP = editTextIp.getText().toString();
+					new Thread(new ClientThread()).start();
 					String str = paramEditText.getText().toString();
 					PrintWriter out = new PrintWriter(new BufferedWriter(
 							new OutputStreamWriter(socket.getOutputStream())),
 							true);
 					out.println(str);
+					/* NEW */
+					out.close();
 				} catch (UnknownHostException e) {
 					e.printStackTrace();
 				} catch (IOException e) {
@@ -66,6 +95,7 @@ public class MainActivity extends Activity {
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
+
 			}
 		});
 
@@ -75,7 +105,9 @@ public class MainActivity extends Activity {
 	protected void onStop() {
 		super.onStop();
 		try {
-			socket.close();
+			if (!socket.isClosed()) {
+				socket.close();
+			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -100,6 +132,14 @@ public class MainActivity extends Activity {
 		return super.onOptionsItemSelected(item);
 	}
 
+	public void startNewService(View view) {
+		startService(new Intent(this, GreenHouseService.class));
+	}
+	
+	public void stopNewService(View view) {
+		stopService(new Intent(this, GreenHouseService.class));
+	}
+	
 	class ClientThread implements Runnable {
 
 		private BufferedReader input;
@@ -109,26 +149,43 @@ public class MainActivity extends Activity {
 
 			try {
 				InetAddress serverAddr = InetAddress.getByName(SERVER_IP);
+				// InetAddress serverAddr =
+				// InetAddress.getByName(editTextIp.toString());
 
 				socket = new Socket(serverAddr, SERVERPORT);
+				//socket.setSoTimeout(3000);
+				Log.i("HIER!!!", "DA11111");
 				this.input = new BufferedReader(new InputStreamReader(
 						socket.getInputStream()));
+				Log.i("HIER!!!", "DA22222");
+				int connectionTime = 0;
 				while (!Thread.currentThread().isInterrupted()) {
-
+					Log.i("HIER!!!", "DA333");
+					if (connectionTime == 5) {
+						return;
+					}
 					try {
+						if (input.ready()) {
 
-						String read = input.readLine();
-						updateConversationHandler.post(new updateTextThread(
-								read));
-
+							String read = input.readLine();
+							Log.i("DEBUG:::::", "Read: " + read);
+							updateConversationHandler
+									.post(new updateTextThread(read));
+						}
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
+					Thread.sleep(1000);
+					connectionTime++;
 				}
+
 			} catch (UnknownHostException e1) {
 				e1.printStackTrace();
 			} catch (IOException e1) {
 				e1.printStackTrace();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
 
 		}

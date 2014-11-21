@@ -5,15 +5,58 @@
  */
 #include <SPI.h>
 #include <WiFi.h>
+#include <mthread.h>
 
-char ssid[] = "WLAN-L8YNC2";     //  your network SSID (name)
-char pass[] = "3910129555865245";    // your network password
+class MainThread : public Thread {
+
+  public:
+    MainThread();
+  protected:
+    bool loop();
+};
+
+class NetworkWorkerThread : public Thread {
+
+  public:
+    NetworkWorkerThread();
+  protected:
+    bool loop();
+    
+    
+    
+};
+
+MainThread::MainThread() {
+  
+}
+
+// Contructor
+NetworkWorkerThread::NetworkWorkerThread() {
+
+}
+
+//char ssid[] = "WLAN-L8YNC2";     //  your network SSID (name)
+//char pass[] = "3910129555865245";    // your network password
+
+//char ssid[] = "HTC Portable Hotspot 2068";     //  your network SSID (name)
+//char pass[] = "Faab2014";    // your network password
+
+char ssid[] = "UC-Projects-WiFi";     //  your network SSID (name)
+char pass[] = "JF1JJXRL1V3JTB9";    // your network password
+
+
+
+int tempPin_1 = 0; // Analog pin 1 for temperature sensor TMP36 
+
+float currentTemp = 0;
 
 // Server status flag.
 int status = WL_IDLE_STATUS;
 
 // Create WiFi server listening on the given port.
 WiFiServer server(80);
+
+
 
 // the setup function runs once when you press reset or power the board
 void setup() {
@@ -53,10 +96,27 @@ void setup() {
   // Print WiFi status.
   printWifiStatus();
 
+  main_thread_list->add_thread(new NetworkWorkerThread());
+  main_thread_list->add_thread(new MainThread());
+}
+
+bool MainThread::loop() {
+  getTemperature();
+  this->sleep(2);
+  return true;
+}
+
+bool NetworkWorkerThread::loop() {
+  if(kill_flag)
+   return false;
+  
+  networkLoop();
+  this->sleep(1);
+  return true; 
 }
 
 // the loop function runs over and over again forever
-void loop() {
+void networkLoop() {
 
   // Check that we are connected.
   if (status != WL_CONNECTED) {
@@ -67,19 +127,24 @@ void loop() {
   if (!client) {
     return;
   }
-  Serial.println("Client connected");
+  Serial.println("Client connected - start");
 
   String request = readRequest(&client);
+  Serial.println("Client connected - middle");
   executeRequest(&client, &request);
-  
+  //client.flush();
+  //client.stop();
+  Serial.println("Client connected - finsih");
 }
 
-// Read the request line. The string from the JavaScript client ends with a newline.
+// Read the request line. The string from the client ends with a newline.
 String readRequest(WiFiClient* client) {
   
+  int counter = 0;
   String request = "";
   // Loop while the client is connected.
-  while (client->connected()) {
+  
+  while (client->connected() && counter <= 1) {
     
     // Read available bytes.
     while (client->available()) {
@@ -96,6 +161,8 @@ String readRequest(WiFiClient* client) {
       // Add byte to request line.
       request += c;
      }
+     delay(500);
+     counter++;
   }
   
   return request;
@@ -106,7 +173,11 @@ void executeRequest(WiFiClient* client, String* request) {
   char command = readCommand(request);
   int n = readParam(request);
   if ('O' == command) {
-    sendResponse(client, "Hallo OOOOO");
+    
+    char TempString[10];  //  Hold The Convert Data
+    dtostrf(currentTemp,2,2,TempString);
+    sendResponse(client, "Temp: " + String(TempString));
+    
     //pinMode(n, OUTPUT);
   }
   
@@ -118,17 +189,6 @@ void executeRequest(WiFiClient* client, String* request) {
     //digitalWrite(n, LOW);
   }
 
-  else if ('H' == command) {
-    //digitalWrite(n, HIGH);
-  }
-  
-  else if ('R' == command) {
-    //sendResponse(client, String(digitalRead(n)));
-  }
-  
-  else if ('A' == command) {
-    //sendResponse(client, String(analogRead(n)));
-  }
   
 }
 
@@ -169,6 +229,22 @@ void printWifiStatus() {
   Serial.print(" Signal strength (RSSI):");
   Serial.print(rssi);
   Serial.println(" dBm");
+}
+
+float getTemperature() {
+  //getting the voltage reading from the temperature sensor
+  int reading = analogRead(tempPin_1);
+  // converting that reading to voltage, for 3.3v arduino use 3.3
+  float voltage = reading * 5.0;
+  voltage /= 1024.0;
+  // print out the voltage
+  Serial.print(voltage); Serial.println(" volts");
+  // now print out the temperature
+  float temperatureC = (voltage - 0.5) * 100 ; //converting from 10 mv per degree wit 500 mV offset
+  //to degrees ((voltage - 500mV) times 100)
+  Serial.print(temperatureC); Serial.println(" degrees C");
+  currentTemp = temperatureC;
+  return temperatureC; 
 }
 
 

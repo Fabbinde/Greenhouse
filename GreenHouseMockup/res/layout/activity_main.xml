@@ -65,4 +65,31 @@
         <requestFocus />
     </EditText>
 
+    <EditText
+        android:id="@+id/editTextIp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/button_testSend"
+        android:layout_alignLeft="@+id/button_testSend"
+        android:layout_marginBottom="21dp"
+        android:ems="10"
+        android:inputType="text|numberDecimal"
+        android:text="192.168.1.136" />
+
+    <Button
+        android:id="@+id/buttonStartService"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/textView_Answer"
+        android:layout_alignRight="@+id/button3"
+        android:text="Start Service" />
+
+    <Button
+        android:id="@+id/buttonEndService"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/buttonStartService"
+        android:layout_below="@+id/buttonStartService"
+        android:text="End Service" />
+
 </RelativeLayout>
