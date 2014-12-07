@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Garduino</string>
+    <string name="welcome_text">Welcome to Garduino !</string>
+    <string name="button1_text">Greenhouse</string>
+    <string name="button2_text">Settings</string>
+    <string name="footer_text">\u00a92014 created by Tobias Alt and Fabian Binder</string>
+
+    <color name="color_arduino">#04B4AE</color>
+    <color name="color_button">#01DFD7</color>
+    <color name="color_white">#FFFFFF</color>
+
+    <string name="title_activity_greenhouse">GreenhouseActivity</string>
+    <string name="temperature">Temperature:</string>
+
+</resources>
