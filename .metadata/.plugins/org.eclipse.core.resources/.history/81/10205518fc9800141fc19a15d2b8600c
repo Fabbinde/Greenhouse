@@ -1,0 +1,20 @@
+package de.htwg.greenhouseService;
+
+public class ArduinoDataBean {
+
+	private String plantName;
+	private String currentTemp_1;
+	private String currentTemp_2;
+	private String currentHumiAir;
+	private String currentHumiGround;
+	
+	
+	private String lightPercent;
+	private String airPercent;
+	
+	private boolean lightOn;
+	private boolean airOn;
+	private boolean waterOn;
+	
+
+}

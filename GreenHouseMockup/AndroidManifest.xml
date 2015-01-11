@@ -31,6 +31,10 @@
             android:enabled="true"
             android:exported="true" >
         </service>
+        <service
+            android:name=".GreenHouseIntentService"
+            android:exported="false" >
+        </service>
     </application>
 
 </manifest>

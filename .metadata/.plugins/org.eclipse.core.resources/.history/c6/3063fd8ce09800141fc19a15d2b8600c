@@ -1,0 +1,45 @@
+package de.htwg.greenhouseService;
+
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.InputStreamReader;
+import java.net.Socket;
+
+import android.os.AsyncTask;
+import android.util.Log;
+
+public class WorkerTask extends AsyncTask<String, Void, String> {
+    
+	int port = 80;
+	
+	@Override
+    protected String doInBackground(String... urls) {
+      String response = "";
+      for (String url : urls) {
+    	  String sentence;
+  		String modifiedSentence;
+  		Log.i("0", "0");
+  		Socket clientSocket = new Socket(url, port);
+  		Log.i("1", "1");
+  		DataOutputStream outToServer = new DataOutputStream(
+  				clientSocket.getOutputStream());
+  		Log.i("2", "2");
+  		BufferedReader inFromServer = new BufferedReader(new InputStreamReader(
+  				clientSocket.getInputStream()));
+  		Log.i("3", "3");
+  		sentence = "HAAALLO :)";
+  		Log.i("4", "4");
+  		outToServer.writeBytes(sentence + '\n');
+  		Log.i("5", "5");
+  		modifiedSentence = inFromServer.readLine();
+  		Log.i("FROM SERVER: ", "ANTWORT = " + modifiedSentence);
+  		clientSocket.close();
+      }
+      return response;
+    }
+
+    @Override
+    protected void onPostExecute(String result) {
+      //textView.setText(result);
+    }
+  }

@@ -1,0 +1,11 @@
+1416852255238	Rename field 'button1'
+1416926652532	Rename type 'CalenderActivity'
+1416926687164	Rename resource 'activity_calender.xml'
+1416926710704	Rename type 'ExerciseActivity'
+1416926764014	Rename field 'listView1'
+1416927962781	Rename type 'Exerice'
+1416928760389	Extract method 'prepareExerciseDummys'
+1416931064896	Delete element
+1416997091750	Move compilation unit
+1416998502661	Move compilation unit
+1416999792508	Encapsulate field 'id'

@@ -1,0 +1,10 @@
+1420733194869	Rename field 'button1'
+1420733202454	Rename field 'textView3'
+1420733209070	Rename field 'textView4'
+1420804440956	Rename package 'de.htwg.greenhouseappnew2015'
+1420804461255	Rename package 'de.htwg.greenhouseapp'
+1420832921559	Encapsulate field 'shouldStop'
+1420834088189	Copy compilation unit
+1420904757259	Move compilation unit
+1420904913490	Rename method 'getDataFromArduino'
+1420917212883	Delete element

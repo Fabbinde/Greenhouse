@@ -1,0 +1,109 @@
+package com.example.testappjersey;
+
+import android.app.Activity;
+import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
+import android.widget.Toast;
+
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.api.client.config.ClientConfig;
+import com.sun.jersey.api.client.config.DefaultClientConfig;
+import com.sun.jersey.api.json.JSONConfiguration;
+
+public class MainActivity extends Activity {
+
+	Button sendFeedbackButton;
+	int patient_1 = 1;
+	int exercise_1 = 1;
+
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.activity_main);
+
+		sendFeedbackButton = (Button) findViewById(R.id.button_sendFeedback);
+		sendFeedbackButton.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				// temporär: User ID, von GUI dann holen
+
+				UserFeedback userFeedback = new UserFeedback(patient_1,
+						exercise_1, RatingEnum.RATE_POSITIV,
+						"Ohne Komplikationen");
+				sendFeedback(userFeedback);
+			}
+		});
+	}
+
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		// Inflate the menu; this adds items to the action bar if it is present.
+		getMenuInflater().inflate(R.menu.main, menu);
+		return true;
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		// Handle action bar item clicks here. The action bar will
+		// automatically handle clicks on the Home/Up button, so long
+		// as you specify a parent activity in AndroidManifest.xml.
+		int id = item.getItemId();
+
+		// noinspection SimplifiableIfStatement
+		if (id == R.id.action_settings) {
+			return true;
+		}
+
+		return super.onOptionsItemSelected(item);
+	}
+
+	private boolean sendFeedback(UserFeedback userFeedback) {
+
+		Toast.makeText(this.getApplicationContext(), "senden..",
+				Toast.LENGTH_SHORT).show();
+
+		ClientConfig clientConfig = new DefaultClientConfig();
+		clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING,
+				Boolean.TRUE);
+
+		Client client = Client.create(clientConfig);
+
+		WebResource webResource = client
+				.resource("http://localhost:8080/de.htwg.aume.restserver/receiveFeedback");
+
+
+		ClientResponse response = webResource.accept("application/json")
+				.type("application/json")
+				.post(ClientResponse.class, userFeedback);
+		
+		if (response.getStatus() != 200) {
+			throw new RuntimeException("Failed : HTTP error code : "
+					+ response.getStatus());
+		}
+
+		String output = response.getEntity(String.class);
+
+		System.out.println("Server response .... \n");
+		System.out.println(output);
+		return true;
+	}
+
+	/*
+	 * 
+	 * @GET
+	 * 
+	 * @Produces(MediaType.APPLICATION_JSON) public String
+	 * receiveFeedbacks(String json) { boolean saved = true; // save = TODO ->
+	 * prüfen ob erfolgreich in Datenbank gespeichert if(saved) { return
+	 * "Erfolgreich gespeichert"; } else { return
+	 * "Fehler beim speichern in der datenbank"; }
+	 * 
+	 * }
+	 */
+
+}
