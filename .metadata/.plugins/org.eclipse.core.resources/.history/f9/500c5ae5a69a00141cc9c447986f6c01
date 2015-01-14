@@ -1,0 +1,11 @@
+package snippet;
+
+public class Snippet {
+	<provider
+	    android:authorities="de.htwg.greenhouseUtil.GreenhouseContentProvider"
+	    android:name=".GreenhouseContentProvider"
+	    android:exported="true"
+	    android:multiprocess="true" >
+	</provider>
+}
+

@@ -1,0 +1,18 @@
+1421089524212	Rename compilation unit 'ContentProvider.java'
+1421090342846	Rename field 'name'
+1421095659134	Encapsulate field 'CONTENT_URI'
+1421097954857	Extract method 'prepareDummyBean'
+1421099210974	Rename type 'GreenHouseArduinoService'
+1421099380625	Move compilation unit
+1421099687737	Move compilation unit
+1421100233125	Delete element
+1421101712363	Delete element
+1421103486873	Rename type 'Utils'
+1421181622063	Rename method 'clearProvider'
+1421185230015	Rename method 'clearDatabase'
+1421185758806	Rename method 'loadDataToGui'
+1421185926991	Rename method 'saveDataToBean'
+1421186419498	Rename field 'greenhouseServiceIntent'
+1421187002811	Rename field 'buttonStartDirectFromService'
+1421187033081	Rename field 'buttonStartContentProvider'
+1421187157617	Rename field 'buttonLoadData'

@@ -20,22 +20,16 @@ public class WorkerTask extends AsyncTask<String, Void, String> {
 		for (String url : urls) {
 			String sentence;
 			String modifiedSentence;
-			Log.i("0", "0");
 			Socket clientSocket;
 			try {
 				clientSocket = new Socket(url, port);
 
-				Log.i("1", "1");
 				DataOutputStream outToServer = new DataOutputStream(
 						clientSocket.getOutputStream());
-				Log.i("2", "2");
 				BufferedReader inFromServer = new BufferedReader(
 						new InputStreamReader(clientSocket.getInputStream()));
-				Log.i("3", "3");
 				sentence = "HAAALLO :)";
-				Log.i("4", "4");
 				outToServer.writeBytes(sentence + '\n');
-				Log.i("5", "5");
 				modifiedSentence = inFromServer.readLine();
 				Log.i("FROM SERVER: ", "ANTWORT = " + modifiedSentence);
 				clientSocket.close();

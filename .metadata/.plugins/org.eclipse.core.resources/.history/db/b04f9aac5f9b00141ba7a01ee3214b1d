@@ -1,0 +1,55 @@
+package de.htwg.greenhouseUtil;
+
+import java.io.IOException;
+
+import com.fasterxml.jackson.core.JsonGenerationException;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
+
+import de.htwg.greenhouseService.ArduinoDataBean;
+
+public class GreenhouseUtils {
+
+	public String objectToJsonString(Object object) {
+		ObjectMapper mapper = new ObjectMapper();
+		ObjectWriter writerWithDefaultPrettyPrinter = mapper
+				.writerWithDefaultPrettyPrinter();
+		String writeValueAsString = null;
+		try {
+			writeValueAsString = writerWithDefaultPrettyPrinter
+					.writeValueAsString(object);
+		} catch (JsonGenerationException e) {
+			e.printStackTrace();
+		} catch (JsonMappingException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		//writeValueAsString = writeValueAsString.replaceAll("\n", "<br/>");
+		return writeValueAsString;
+	}
+
+	public ArduinoDataBean StringToBean(String json) {
+         
+        //create ObjectMapper instance
+        ObjectMapper objectMapper = new ObjectMapper();
+        ArduinoDataBean bean = null;
+        //convert json string to object
+        try {
+			bean = objectMapper.readValue(json, ArduinoDataBean.class);
+		} catch (JsonParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (JsonMappingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        return bean;
+	}
+
+}
