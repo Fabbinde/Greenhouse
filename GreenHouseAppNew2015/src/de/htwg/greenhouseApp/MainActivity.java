@@ -20,6 +20,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import de.htwg.greenhouseService.ArduinoDataBean;
 import de.htwg.greenhouseService.GreenhouseArduinoService;
+import de.htwg.greenhouseService.GreenhouseArduinoService.LocalBinder;
 import de.htwg.greenhouseUtil.GreenhouseContentProvider;
 import de.htwg.greenhouseUtil.GreenhouseUtils;
 import de.htwg.greenhouseappnew2015.R;
@@ -42,7 +43,7 @@ public class MainActivity extends Activity {
 	TextView textViewTemp1;
 	TextView textViewHumiAir;
 
-	Messenger mService = null;
+	// GreenhouseArduinoService mService = null;
 	boolean mIsBound = false;
 	boolean newDataLoaded = false;
 
@@ -53,10 +54,13 @@ public class MainActivity extends Activity {
 
 	private String LOG_TAG = this.getClass().getSimpleName();
 
+	private MainActivity myActivity;
+	
 	ServiceConnection serviceConnection = new ServiceConnection() {
 
 		@Override
 		public void onServiceDisconnected(ComponentName name) {
+
 			mIsBound = false;
 			Toast.makeText(getBaseContext(),
 					"Verbindung zum Greenhouse Service wurde unterbrochen!",
@@ -65,6 +69,11 @@ public class MainActivity extends Activity {
 
 		@Override
 		public void onServiceConnected(ComponentName name, IBinder service) {
+			LocalBinder binder = (LocalBinder) service;
+			greenhouseService = binder.getService();
+			greenhouseService.addGuiListener(myActivity);
+			
+			
 			mIsBound = true;
 			Toast.makeText(getBaseContext(),
 					"Verbindung zum Greenhouse Service wurde hergestellt!",
@@ -81,6 +90,8 @@ public class MainActivity extends Activity {
 
 		aBean = new ArduinoDataBean();
 
+		
+		
 		startServiceButton = (Button) findViewById(R.id.buttonStartService);
 		stopServiceHandlerButton = (Button) findViewById(R.id.buttonStopHandler);
 		startContentProviderButton = (Button) findViewById(R.id.buttonLoadDataFromContentProvider);
@@ -101,29 +112,11 @@ public class MainActivity extends Activity {
 						GreenhouseArduinoService.class), serviceConnection,
 						Context.BIND_IMPORTANT)) {
 					mIsBound = true;
-					greenhouseService = new GreenhouseArduinoService();
+
+					// greenhouseService = new GreenhouseArduinoService();
+
 				} else
 					mIsBound = false;
-
-				/*
-				 * TODO MORGEN - ContentProvider benutzen um die Daten
-				 * abzuspeichern. (hier dann beachten das mehrere Messwerte
-				 * zurückkommen können , da der arduino ja alle speichert.) (am
-				 * besten immer nicht mehr wie 20 Messwertzeitpunkte, dann
-				 * lieber ein Flag mitübergeben damit man hier weis ob der
-				 * Arduino noch was nachsendet (bei 50 noch ok, bei 20000
-				 * Datensätzen nicht mehr) - Activity greift dann auf den
-				 * Contentprovider zu um auf die Daten vom Service zugreifen zu
-				 * können - Vielleicht auch einfach einen Zeitraum angeben, von
-				 * wann bis wann (Nur für die Statistik wichtig) die aktuellen
-				 * Werte reichen ja dann auch so aus. - Hier auf Android seite
-				 * dann einfach die Werte die jede 2 Minuten geladen werden vom
-				 * Arduino im Service überprüfen und ggf. Alarm ausgeben wenn
-				 * was nicht stimmt
-				 * 
-				 * TCP Verbindung läuft noch nicht ganz, server checken!!
-				 */
-
 			}
 		});
 
@@ -160,7 +153,7 @@ public class MainActivity extends Activity {
 
 			}
 		});
-
+		myActivity = this;
 	}
 
 	@Override
@@ -189,6 +182,7 @@ public class MainActivity extends Activity {
 
 	@Override
 	protected void onResume() {
+		Log.i(LOG_TAG,"onResume");
 		greenhouseIntent = new Intent(getApplicationContext(),
 				GreenhouseArduinoService.class);
 		if (!mIsBound) {
@@ -208,6 +202,7 @@ public class MainActivity extends Activity {
 
 	@Override
 	protected void onRestart() {
+		Log.i(LOG_TAG,"onRestart");
 		greenhouseIntent = new Intent(getApplicationContext(),
 				GreenhouseArduinoService.class);
 		if (!mIsBound) {
@@ -270,6 +265,7 @@ public class MainActivity extends Activity {
 
 	public void loadDataDirectFromService() {
 		this.aBean = greenhouseService.getDataBean();
+
 		if (this.aBean != null) {
 			newDataLoaded = true;
 		}
@@ -281,6 +277,11 @@ public class MainActivity extends Activity {
 		textViewTemp1.setText(String.valueOf(this.aBean.getCurrentTemp_1()));
 		textViewHumiAir.setText(String.valueOf(this.aBean.getCurrentHumiAir()));
 
+	}
+	
+	public void addBeanListener(ArduinoDataBean bean) {
+		Log.i("HALLO VON ACTIVITY", String.valueOf(bean.getCurrentTemp_1()));
+		this.aBean = bean;
 	}
 
 }

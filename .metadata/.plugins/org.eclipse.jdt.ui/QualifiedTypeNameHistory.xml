@@ -49,7 +49,6 @@
 <fullyQualifiedTypeName name="android.net.wifi.WpsInfo"/>
 <fullyQualifiedTypeName name="android.content.ServiceConnection"/>
 <fullyQualifiedTypeName name="android.content.Intent"/>
-<fullyQualifiedTypeName name="de.htwg.greenhouseService.GreenhouseArduinoService"/>
 <fullyQualifiedTypeName name="de.htwg.greenhouseApp.MainActivity"/>
 <fullyQualifiedTypeName name="de.htwg.greenhouseappnew2015.R.id"/>
 <fullyQualifiedTypeName name="android.view.View.OnClickListener"/>
@@ -60,4 +59,5 @@
 <fullyQualifiedTypeName name="de.htwg.greenhouseService.ArduinoDataBean"/>
 <fullyQualifiedTypeName name="java.lang.reflect.Array"/>
 <fullyQualifiedTypeName name="java.util.ArrayList"/>
+<fullyQualifiedTypeName name="de.htwg.greenhouseService.GreenhouseArduinoService"/>
 </qualifiedTypeNameHistroy>

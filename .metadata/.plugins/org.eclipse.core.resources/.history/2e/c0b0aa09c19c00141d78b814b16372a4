@@ -1,0 +1,200 @@
+package de.htwg.greenhouseService;
+
+import java.sql.Timestamp;
+
+
+
+/* Spaeter mit Jackson vielleicht? Dann kann man den Json direkt in das Arduino Bean Objekt umwandeln
+ * 
+ * https://github.com/bblanchon/ArduinoJson
+ * Sensordaten->Arduino->ArduinoJson->perPOSTversenden->Android->Jackson->ArduinoDataBean->MainActivity und umgekehrt!
+ * 
+ * 
+ * */
+public class ArduinoDataBean {
+
+	public ArduinoDataBean() {
+		
+	}
+	
+	public int getId() {
+		return id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
+
+	public String getPlantName() {
+		return plantName;
+	}
+
+	public void setPlantName(String plantName) {
+		this.plantName = plantName;
+	}
+
+	public Timestamp getTimeStamp() {
+		return timeStamp;
+	}
+
+	public void setTimeStamp(Timestamp timeStamp) {
+		this.timeStamp = timeStamp;
+	}
+
+	public double getCurrentTemp_1() {
+		return currentTemp_1;
+	}
+
+	public void setCurrentTemp_1(double currentTemp_1) {
+		this.currentTemp_1 = currentTemp_1;
+	}
+
+	public double getCurrentTemp_2() {
+		return currentTemp_2;
+	}
+
+	public void setCurrentTemp_2(double currentTemp_2) {
+		this.currentTemp_2 = currentTemp_2;
+	}
+
+	public double getCurrentHumiAir() {
+		return currentHumiAir;
+	}
+
+	public void setCurrentHumiAir(double currentHumiAir) {
+		this.currentHumiAir = currentHumiAir;
+	}
+
+	public double getCurrentHumiGround() {
+		return currentHumiGround;
+	}
+
+	public void setCurrentHumiGround(double currentHumiGround) {
+		this.currentHumiGround = currentHumiGround;
+	}
+
+	public double getLightPercent() {
+		return lightPercent;
+	}
+
+	public void setLightPercent(double lightPercent) {
+		this.lightPercent = lightPercent;
+	}
+
+	public double getAirPercent() {
+		return airPercent;
+	}
+
+	public void setAirPercent(double airPercent) {
+		this.airPercent = airPercent;
+	}
+
+	public boolean isLightOn() {
+		return lightOn;
+	}
+
+	public void setLightOn(boolean lightOn) {
+		this.lightOn = lightOn;
+	}
+
+	public boolean isAirOn() {
+		return airOn;
+	}
+
+	public void setAirOn(boolean airOn) {
+		this.airOn = airOn;
+	}
+
+	public boolean isWaterOn() {
+		return waterOn;
+	}
+
+	public void setWaterOn(boolean waterOn) {
+		this.waterOn = waterOn;
+	}
+
+	public double getMaxTemp() {
+		return maxTemp;
+	}
+
+	public void setMaxTemp(double maxTemp) {
+		this.maxTemp = maxTemp;
+	}
+
+	public double getMinTemp() {
+		return minTemp;
+	}
+
+	public void setMinTemp(double minTemp) {
+		this.minTemp = minTemp;
+	}
+
+	public double getMaxHumiAir() {
+		return maxHumiAir;
+	}
+
+	public void setMaxHumiAir(double maxHumiAir) {
+		this.maxHumiAir = maxHumiAir;
+	}
+
+	public double getMinHumiAir() {
+		return minHumiAir;
+	}
+
+	public void setMinHumiAir(double minHumiAir) {
+		this.minHumiAir = minHumiAir;
+	}
+
+	public double getMaxHumiGround() {
+		return maxHumiGround;
+	}
+
+	public void setMaxHumiGround(double maxHumiGround) {
+		this.maxHumiGround = maxHumiGround;
+	}
+
+	public double getMinHumiGround() {
+		return minHumiGround;
+	}
+
+	public void setMinHumiGround(double minHumiGround) {
+		this.minHumiGround = minHumiGround;
+	}
+
+	public int getWaterTimeSeconds() {
+		return waterTimeSeconds;
+	}
+
+	public void setWaterTimeSeconds(int waterTimeSeconds) {
+		this.waterTimeSeconds = waterTimeSeconds;
+	}
+
+	private int id;
+	
+	//private String plantName;
+
+	private Timestamp timeStamp;
+	
+	private double currentTemp_1;
+	private double currentTemp_2;
+	private double currentHumiAir;
+	private double currentHumiGround;
+	
+	
+	private double lightPercent;
+	private double airPercent;
+	
+	private boolean lightOn;
+	private boolean airOn;
+	private boolean waterOn;
+	
+	private double maxTemp;
+	private double minTemp;
+	private double maxHumiAir;
+	private double minHumiAir;
+	private double maxHumiGround;
+	private double minHumiGround;
+	
+	private int waterTimeSeconds;
+	
+}

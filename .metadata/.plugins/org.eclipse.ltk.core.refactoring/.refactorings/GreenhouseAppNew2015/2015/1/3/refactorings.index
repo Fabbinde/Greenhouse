@@ -16,3 +16,8 @@
 1421187002811	Rename field 'buttonStartDirectFromService'
 1421187033081	Rename field 'buttonStartContentProvider'
 1421187157617	Rename field 'buttonLoadData'
+1421271088487	Rename type 'WorkerTask'
+1421329626710	Rename local variable 'sentence'
+1421337140747	Encapsulate field 'bean'
+1421338679724	Delete element
+1421338688051	Delete element

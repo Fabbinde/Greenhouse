@@ -16,13 +16,15 @@ public class GreenhouseUtils {
 
 	private String LOG_TAG = this.getClass().getSimpleName();
 	
+	
 	public String objectToJsonString(Object object) {
 		ObjectMapper mapper = new ObjectMapper();
+		ObjectWriter a = mapper.writerWithType(ArduinoDataBean.class);
 		ObjectWriter writerWithDefaultPrettyPrinter = mapper
 				.writerWithDefaultPrettyPrinter();
 		String writeValueAsString = null;
 		try {
-			writeValueAsString = writerWithDefaultPrettyPrinter
+			writeValueAsString = a
 					.writeValueAsString(object);
 		} catch (JsonGenerationException e) {
 			Log.e(LOG_TAG + " objectToJsonString() - JsonGenerationException", e.getMessage().toString());
@@ -56,6 +58,8 @@ public class GreenhouseUtils {
 			Log.e(LOG_TAG + " StringToBean() - IOException", e.getMessage().toString());
 			e.printStackTrace();
 		}
+        
+        
         return bean;
 	}
 

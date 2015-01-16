@@ -21,17 +21,16 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.sql.Timestamp;
 import java.util.ArrayList;
 
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
+import android.os.Binder;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
@@ -49,16 +48,21 @@ public class GreenhouseArduinoService extends Service {
 
 	public final static int MESSAGE_CANCEL_HANDLER = 1;
 	public final static int MESSAGE_CLEAR_DATABASE = 2;
+	public final static int MESSAGE_NEW_BEAN = 3;
 
 	private boolean notificationTemperatureIsShowing = false;
 	private boolean notificationHumiAirIsShowing = false;
 	// TODO Restliche noch hier hinzufügen und unten immer abfragen, bevor eine
 	// neue gesendet wird
 
-	GreenhouseUtils greenhouseUtils = new GreenhouseUtils();
+	MainActivity myGuiActivity;
 
-	String ip = "141.37.192.14";
+	GreenhouseUtils greenhouseUtils;
+
+	String ip = "192.168.1.136";
 	int port = 80;
+
+	boolean connectedToArduino = false;
 
 	private int serviceCheckIntervall = 5000;
 
@@ -81,25 +85,35 @@ public class GreenhouseArduinoService extends Service {
 	private Looper mServiceLooper;
 	private ServiceHandler mServiceHandler;
 
+	private ResponseHandler responseHandler;
+
 	Intent activityIntent;
 
 	GreenhouseContentProvider contentProvider;
 
 	private String LOG_TAG = this.getClass().getSimpleName();
 
-	public int getServiceCheckIntervall() {
-		return serviceCheckIntervall;
-	}
-
-	public void setServiceCheckIntervall(int serviceCheckIntervall) {
-		this.serviceCheckIntervall = serviceCheckIntervall;
+	public class LocalBinder extends Binder {
+		public GreenhouseArduinoService getService() {
+			// Return this instance of LocalService so clients can call public
+			// methods
+			return GreenhouseArduinoService.this;
+		}
 	}
 
 	public GreenhouseArduinoService() {
-		prepareDummyBean();
-		contentProvider = new GreenhouseContentProvider();
+		greenhouseUtils = new GreenhouseUtils();
+		// prepareDummyBean();
+		// contentProvider = new GreenhouseContentProvider();
+		aBean = new ArduinoDataBean();
+
+		mBinder = new LocalBinder();
 		beans = new ArrayList<ArduinoDataBean>();
 		beans.add(aBean);
+	}
+
+	public void addGuiListener(MainActivity myActivity) {
+		this.myGuiActivity = myActivity;
 	}
 
 	private void prepareDummyBean() {
@@ -114,26 +128,35 @@ public class GreenhouseArduinoService extends Service {
 		aBean.setId(8);
 		aBean.setLightOn(true);
 		aBean.setLightPercent(100.00);
-		aBean.setMaxHumiAir(95.00);
+		aBean.setMaxHumiAir(95);
 		aBean.setMaxHumiGround(98);
-		aBean.setMaxTemp(30.00);
-		aBean.setMinHumiAir(20.50);
-		aBean.setMinHumiGround(25.00);
-		aBean.setMinTemp(10.00);
-		aBean.setPlantName("Petersilie");
+		aBean.setMaxTemp(30);
+		aBean.setMinHumiAir(20);
+		aBean.setMinHumiGround(25);
+		aBean.setMinTemp(10);
+		// aBean.setPlantName("Petersilie");
 		aBean.setTimeStamp(new java.sql.Timestamp(System.currentTimeMillis()));
 		aBean.setWaterOn(true);
 		aBean.setWaterTimeSeconds(10);
+		String obToString = greenhouseUtils.objectToJsonString(aBean);
 
+		// Log.i("NORMAL BEAN obToString:", obToString);
+
+		// ArduinoDataBean b = greenhouseUtils.StringToBean(obToString);
+
+		// Log.i("NORMAL BEAN StringToOb Temp:",
+		// String.valueOf(b.getCurrentTemp_1()));
 	}
 
 	// Handler that receives messages from the thread
 	private final class ServiceHandler extends Handler {
 
 		private String LOG_TAG = this.getClass().getSimpleName();
+		ResponseHandler response;
 
-		public ServiceHandler(Looper looper) {
+		public ServiceHandler(Looper looper, ResponseHandler resp) {
 			super(looper);
+			this.response = resp;
 		}
 
 		@Override
@@ -142,33 +165,25 @@ public class GreenhouseArduinoService extends Service {
 			// For our sample, we just sleep for 5 seconds.
 			Log.d(LOG_TAG + " handleMessage", "start Handler Thread loop");
 
-			int testCountLoop = 0;
-
 			while (true) {
 
-				// TODO
-				// FIXME
-				// Hier Daten von Arduino laden!
-				// getDataFromArduinoByTcp();
-				// ODER?
-				// getDataFromArduinoByAsyncTcp();
 				synchronized (this) {
+
 					try {
-						// FIXME
-						// TODO
-						// wenn hier oben drüber die tcp verbindung passt,
-						// kommen die folgenden Dummy änderungen raus:
-						if (testCountLoop == 3) {
-							aBean.setCurrentTemp_1(32.00);
-						}
-						if (testCountLoop == 6) {
-							aBean.setCurrentHumiAir(99.00);
-						}
-						if (testCountLoop == 12) {
-							testCountLoop = 0;
-						}
-						testCountLoop++;
-						// END FIXME
+						ArduinoDataBean daBean = getDataFromArduinoByTcp();
+						Message responseMessage = new Message();
+						responseMessage.obj = daBean;
+						responseMessage.what = MESSAGE_NEW_BEAN;
+
+						response.sendMessage(responseMessage);
+
+						// TODO HIER MESSAGE ZURUECK SENDEN
+					} catch (UnknownHostException e1) {
+						e1.printStackTrace();
+					} catch (IOException e1) {
+						e1.printStackTrace();
+					}
+					try {
 
 						// adde jede bean damit man später ein diagramm malen
 						// kann
@@ -183,13 +198,13 @@ public class GreenhouseArduinoService extends Service {
 									"STOP");
 							stopSelf(msg.arg1);
 							break;
-						} else if (this.hasMessages(MESSAGE_CLEAR_DATABASE)) {
-							this.removeMessages(MESSAGE_CLEAR_DATABASE);
-							// Clear database
-							Log.d(LOG_TAG + "handleMessage - while(true)",
-									"CLEAR DATABASE");
-							clearProviderData();
-						}
+						} /*
+						 * else if (this.hasMessages(MESSAGE_CLEAR_DATABASE)) {
+						 * this.removeMessages(MESSAGE_CLEAR_DATABASE); // Clear
+						 * database Log.d(LOG_TAG +
+						 * "handleMessage - while(true)", "CLEAR DATABASE");
+						 * clearProviderData(); }
+						 */
 						Log.d(LOG_TAG + " handleMessage - while(true)",
 								"Warte auf daten..");
 
@@ -206,6 +221,23 @@ public class GreenhouseArduinoService extends Service {
 
 	}
 
+	// This class handles the Service response
+	class ResponseHandler extends Handler {
+
+		@Override
+		public void handleMessage(Message msg) {
+			int respCode = msg.what;
+
+			switch (respCode) {
+			case MESSAGE_NEW_BEAN: {
+				aBean = (ArduinoDataBean) msg.obj;
+				sendDataBeanToGui(aBean);
+			}
+			}
+		}
+
+	}
+
 	@Override
 	public void onCreate() {
 		// The service is being created
@@ -218,8 +250,9 @@ public class GreenhouseArduinoService extends Service {
 		thread.start();
 
 		// Get the HandlerThread's Looper and use it for our Handler
+		responseHandler = new ResponseHandler();
 		mServiceLooper = thread.getLooper();
-		mServiceHandler = new ServiceHandler(mServiceLooper);
+		mServiceHandler = new ServiceHandler(mServiceLooper, responseHandler);
 		Log.i("onCreate", "CREATE");
 
 	}
@@ -335,95 +368,140 @@ public class GreenhouseArduinoService extends Service {
 		mNM.notify(notificationCounter, noti);
 	}
 
-	@SuppressWarnings("unused")
-	private boolean getDataFromArduinoByAsyncTcp() {
+	/*
+	 * private boolean getDataFromArduinoByAsyncTcp() {
+	 * 
+	 * WorkerTaskTcp task = new WorkerTaskTcp(); task.execute(new String[] { ip
+	 * });
+	 * 
+	 * return true; }
+	 * 
+	 * private boolean getDataFromArduinoByHttp() throws
+	 * ClientProtocolException, IOException, JSONException { try { InetAddress
+	 * serverAddr = InetAddress.getByName(ip);
+	 * 
+	 * Socket socket = new Socket(serverAddr, port); BufferedReader input = new
+	 * BufferedReader(new InputStreamReader( socket.getInputStream())); if
+	 * (input != null) { String read = input.readLine(); Log.i("ANTWORT:",
+	 * read); }
+	 * 
+	 * } catch (UnknownHostException e1) { e1.printStackTrace(); } catch
+	 * (IOException e1) { e1.printStackTrace(); }
+	 * 
+	 * return true;
+	 * 
+	 * }
+	 */
+	private ArduinoDataBean getDataFromArduinoByTcp()
+			throws UnknownHostException, IOException {
 
-		WorkerTask task = new WorkerTask();
-		task.execute(new String[] { ip });
-
-		return true;
-	}
-
-	@SuppressWarnings("unused")
-	private boolean getDataFromArduinoByTcp() throws UnknownHostException,
-			IOException {
-		String sentence;
-		String modifiedSentence;
+		String parameter;
+		String serverAnswer = "";
 		Socket clientSocket = new Socket(ip, port);
+
 		DataOutputStream outToServer = new DataOutputStream(
 				clientSocket.getOutputStream());
 		BufferedReader inFromServer = new BufferedReader(new InputStreamReader(
 				clientSocket.getInputStream()));
-		// TODO Parameter für Arduino bestimmen (falls Tcp nicht geht, dann
-		// HTTP)
-		sentence = "TestSend :)";
-		outToServer.writeBytes(sentence + '\n');
 
-		modifiedSentence = inFromServer.readLine();
-		Log.d("FROM SERVER: ", "ANTWORT = " + modifiedSentence);
+		parameter = "Hallo";
+		outToServer.writeBytes(parameter + '\n');
+
+		int i = 0;
+		boolean firstTime = true;
+		while (true) {
+			String read = null;
+			if (inFromServer.ready()) {
+				read = inFromServer.readLine();
+				if (read == null) {
+					break;
+				}
+
+				if (read.contains("waterOn") || read.contains("airOn")
+						|| read.contains("lightOn")) {
+					read = read.replace("1", "true");
+					read = read.replace("0", "false");
+				}
+
+				if (i == 0) {
+					read = read.replace("}", "");
+				} else if ((i > 0) && (i < 6)) {
+					if (firstTime) {
+						read = read.replace("{", ",");
+						read = read.replace("}", ",");
+						firstTime = false;
+					} else {
+						read = read.replace("{", "");
+						read = read.replace("}", ",");
+					}
+
+				} else if (i == 6) {
+					read = read.replace("{", "");
+				}
+
+				i++;
+			} else {
+				continue;
+			}
+
+			serverAnswer += read;
+		}
+
+		Log.d("FROM SERVER: ", "ANTWORT = " + serverAnswer);
 		clientSocket.close();
 
-		saveDataToBeanByJsonString(modifiedSentence);
-
-		return true;
+		return saveDataToBeanByJsonString(serverAnswer);
 	}
 
-	public void saveDataToBeanByJsonString(String json) {
+	public ArduinoDataBean saveDataToBeanByJsonString(String json) {
 		if (json != null && json != "") {
-			greenhouseUtils.StringToBean(json);
-		}
-		// greenhouseUtils.StringToBean(json);
+			// TODO GEHT NICHT bzw. auf this.bean kann nicht zugegriffen werden!
+			// this.aBean = bean;
+
+			ArduinoDataBean bean = greenhouseUtils.StringToBean(json);
+			return bean;
+		} else
+			return null;
 	}
 
-	public void saveDataToProvider() {
-
-		aBean.setId(aBean.getId() + 1);
-
-		String json = greenhouseUtils.objectToJsonString(aBean);
-
-		Log.i("JSON:", json);
-
-		ContentValues values = new ContentValues();
-		values.put(GreenhouseContentProvider.id, aBean.getId());
-		values.put(GreenhouseContentProvider.timestamp,
-				new Timestamp(System.currentTimeMillis()).toString());
-		values.put(GreenhouseContentProvider.jsonData, json);
-		getContentResolver().insert(GreenhouseContentProvider.getContentUri(),
-				values);
-
-	}
-
-	private boolean clearProviderData() {
-		// String where = "nameid=?";
-		// String[] args = new String[] { "george" };
-		// ContentResolver resolver = getContentResolver();
-		// String[] projection = new String[] { "id",
-		// GreenhouseContentProvider.id };
-		// Cursor cursor = resolver.query(
-		// GreenhouseContentProvider.getContentUri(), projection, null,
-		// null, null);
-		// if (cursor.moveToFirst()) {
-		// do {
-		// long id = cursor.getLong(0);
-		// String word = cursor.getString(1);
-		// Log.i("Data: ", "id = " + word);
-		// } while (cursor.moveToNext());
-		// }
-
-		getContentResolver().delete(GreenhouseContentProvider.getContentUri(),
-				null, null);
-		return true;
-	}
-
-	public void messageClearDatabase() {
-		// Sende message zum Thread Handler
-		Message m = new Message();
-		m.what = MESSAGE_CLEAR_DATABASE;
-		mServiceHandler.sendMessage(m);
-	}
+	/*
+	 * public void saveDataToProvider() {
+	 * 
+	 * aBean.setId(aBean.getId() + 1);
+	 * 
+	 * String json = greenhouseUtils.objectToJsonString(aBean);
+	 * 
+	 * Log.i("JSON:", json);
+	 * 
+	 * ContentValues values = new ContentValues();
+	 * values.put(GreenhouseContentProvider.id, aBean.getId());
+	 * values.put(GreenhouseContentProvider.timestamp, new
+	 * Timestamp(System.currentTimeMillis()).toString());
+	 * values.put(GreenhouseContentProvider.jsonData, json);
+	 * getContentResolver().insert(GreenhouseContentProvider.getContentUri(),
+	 * values);
+	 * 
+	 * }
+	 * 
+	 * private boolean clearProviderData() {
+	 * getContentResolver().delete(GreenhouseContentProvider.getContentUri(),
+	 * null, null); return true; }
+	 * 
+	 * public void messageClearDatabase() { // Sende message zum Thread Handler
+	 * Message m = new Message(); m.what = MESSAGE_CLEAR_DATABASE;
+	 * mServiceHandler.sendMessage(m); }
+	 */
 
 	public ArduinoDataBean getDataBean() {
-		return aBean;
+		Log.i("GETBEAN", String.valueOf(aBean.getCurrentTemp_1()));
+
+		return this.aBean;
+	}
+
+	public void sendDataBeanToGui(ArduinoDataBean bean) {
+		Log.i("GETBEAN", String.valueOf(aBean.getCurrentTemp_1()));
+
+		myGuiActivity.addBeanListener(bean);
 	}
 
 	public void checkTemperatureAndHumidity() {
@@ -454,6 +532,14 @@ public class GreenhouseArduinoService extends Service {
 					"Die Luftfeuchtigkeit im Gewächshaus ist zu niedrig!",
 					String.valueOf(aBean.getCurrentHumiAir()));
 		}
+	}
+
+	public int getServiceCheckIntervall() {
+		return serviceCheckIntervall;
+	}
+
+	public void setServiceCheckIntervall(int serviceCheckIntervall) {
+		this.serviceCheckIntervall = serviceCheckIntervall;
 	}
 
 }
